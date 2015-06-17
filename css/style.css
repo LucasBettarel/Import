@@ -1,0 +1,21 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  margin-bottom: 60px;
+  margin-top: 70px;
+}
+
+nav img{
+  margin-top: -9px;
+  height: 200%;
+}
+
+.content .well{
+  margin-bottom: 2px;
+}
+
+.persist{
+  vertical-align: middle;
+}

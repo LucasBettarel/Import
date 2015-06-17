@@ -1,0 +1,8 @@
+ashost: prhci.sg.schneider-electric.com
+sysnr: "00"
+client: "200"
+user: SESA282699
+passwd: Weight.3
+lang: EN
+trace: 1
+loglevel: warn
