@@ -85,8 +85,8 @@ class sapConnection
                     $test[$j] = date_format($test[$j],'d/m/Y');
                 }
                 elseif ($j ==  5){
-                    $test[$j] = date_create_from_format('Hms',$test[$j]);
-                    $test[$j] = date_format($test[$j],'H:m:s');
+                    $test[$j] = date_create_from_format('His',$test[$j]);
+                    $test[$j] = date_format($test[$j],'H:i:s');
                 }
                 echo $test[$j];
                 echo "</td>";
@@ -96,22 +96,34 @@ class sapConnection
     }
 
     public function sapPersist($data){
-        $my_connect = mysql_connect("localhost","root","");
-        if (!$my_connect) {
-            die('Error connecting to the database: ' . mysql_error());
+        try {
+            $bdd = new PDO('mysql:host=localhost;dbname=zest;charset=utf8', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+        } catch (Exception $e) {
+            die('Error : ' . $e->getMessage());
         }
-        mysql_select_db("zest", $my_connect);
 
         for($i=0; $i<sizeof($data[1]); $i++){
             $cell = split("@",$data[1][$i]["WA"]);
 
             $cell[4] = date_create_from_format('Ymd', $cell[4]);
+            $cell[4] = $cell[4]->format('Y-m-d');
             $cell[5] = date_create_from_format('His', $cell[5]);
+            $cell[5] = $cell[5]->format('H:i:s');
 
-            mysql_query("INSERT INTO zest (warehouse, transfer_order, material, plant, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
-                         VALUES (".$cell[0].",".$cell[1].",".$cell[2].",".$cell[3].",".$cell[4].",".$cell[5].",".$cell[6].",".$cell[7].",".$cell[8].")");
-
-        mysql_close($my_connect);
+            $req = $bdd->prepare('INSERT INTO saprf (warehouse, transfer_order, material, plant, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
+                                  VALUES (:warehouse, :transfer_order, :material, :plant, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin)');
+            $req->execute(array(
+                'warehouse' => $cell[0],
+                'transfer_order' => $cell[1],
+                'material' => $cell[2],
+                'plant' => $cell[3],
+                'date_confirmation' => $cell[4],
+                'time_confirmation' => $cell[5],
+                'user' => $cell[6],
+                'source_storage_type' => $cell[7],
+                'source_storage_bin' => $cell[8]
+                ));
+        }
     }
 
     public function sapClose(){
@@ -120,8 +132,8 @@ class sapConnection
     }
 
     public function getDate(){
-        if (isset($_GET['date'])){
-            return $_GET['date'];
+        if (isset($_POST['date']) && !is_null($_POST['date'])){
+            return $_POST['date'];
         }
         else{
             return 0;

@@ -35,11 +35,14 @@
   <?php
 	require_once 'TO.php';
 
+	ini_set('max_execution_time', 300);
+
 	$connect = new sapConnection();
 
 	$connect->setUp();
 	$connect->sapConnect();
-	if (!is_null($connect->getDate())){
+	$date = $connect->getDate();
+	if (!is_null($date) and $date != 0 and $date != ""){
 		$date = date_create_from_format('Y-m-d',$connect->getDate());
 		$date = date_format($date,'Ymd');
 		$res = $connect->readTable($date);
@@ -54,6 +57,7 @@
 		$log = "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'><h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4><p>The date you provided contains an error, please check.</p></div>";
 	}
 
+	$connect->sapPersist($res);		
 
   ?>
 
@@ -85,7 +89,7 @@
 	  				echo "<a href='http://localhost:8000/input/extimport' class='btn btn-warning btn-lg' role='button'><i class='glyphicon glyphicon-repeat'></i> Return</a>";
 	  			}
 	  			else{
-	  				echo "<button class='btn btn-primary btn-lg' role='button'><i class='glyphicon glyphicon-cloud'></i> Save</button>";
+	  				echo "<a href='http://localhost:8000/input' class='btn btn-primary btn-lg' role='button'><i class='glyphicon glyphicon-cloud'></i> Return</a>";
 	  			}
 	  		?>
 	  	</div>
