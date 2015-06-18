@@ -32,83 +32,113 @@
     </div>
   </nav>
 
-  <?php
-	require_once 'TO.php';
+  	<div id="content" class="col-md-12">
+	  	<div class="col-md-3">
+	  		<h1>Import</h1>
+	  	</div>
 
-	ini_set('max_execution_time', 300);
+		<?php
+		require_once 'TO.php';
+		ini_set('max_execution_time', 300);
+		$connect = new sapConnection();
 
-	$connect = new sapConnection();
+		//step 0 : check if date is valid (not null + not=0 +checkdate true)
+		$raw_date = $connect->getDate();
+		$date = date_create_from_format('Y-m-d',$raw_date);
+		$datesap = date_format($date,'Ymd');
+		$date_year = date_format($date,'Y');
+		$date_month = date_format($date,'m');
+		$date_day = date_format($date,'d');
+		
+		if (!is_null($raw_date) and $raw_date != 0 and $raw_date != "" and checkdate($date_month, $date_day, $date_year)){
+	
+			//step 1: check if data exist in SAP import
+			if (!$connect->checkImportExist($raw_date)){
 
-	$connect->setUp();
-	$connect->sapConnect();
-	$date = $connect->getDate();
-	if (!is_null($date) and $date != 0 and $date != ""){
-		$date = date_create_from_format('Y-m-d',$connect->getDate());
-		$date = date_format($date,'Ymd');
-		$res = $connect->readTable($date);
-		if (!$res[0] or ($connect->getDataSize($res)) == 0){
-			$log = "<div class='alert alert-warning col-md-4 col-md-offset-1' role='alert'><h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups !</h4><p>Something went wrong, please try again...</p></div>";
+				//step 2 : connect to SAP
+				$connect->setUp();
+				if ($connect->sapConnect()){
+
+					//step 3 : read Table (not error or not empty result)
+					$res = $connect->readTable($datesap);
+					if (!$res[0] or ($connect->getDataSize($res)) == 0){
+						//error on read data Table
+						echo "<div class='alert alert-warning col-md-4 col-md-offset-1' role='alert'>
+								<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups !</h4>
+								<p>Error on importing data from SAP, please try again...</p>
+								<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+									<i class='glyphicon glyphicon-repeat'></i> Return</a>
+								</p>
+							  </div>";
+					}
+					else{
+
+						//step 4 : split/prepare array and consolidate
+						$res[1] = $connect->consolidateData($res[1]);
+
+						//step 5 : persist data to phpmyadmin
+						$saving = $connect->sapPersist($res[1], $raw_date);
+
+						if(!$saving){
+							echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+									<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups ! </h4>
+									<p>Something went wrong while saving data, please check.</p>
+									<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+											<i class='glyphicon glyphicon-repeat'></i> Return</a>
+									</p>
+								  </div>";
+						}
+						else{
+							echo "<div class='alert alert-success col-md-4 col-md-offset-1' role='alert'>
+									<h4><i class='glyphicon glyphicon-thumbs-up'></i> The import was realized with success ! </h4>
+									<p>Feel free to check the data then go back to work...</p>
+									<p><a href='http://localhost:8000/input/extimport' class='btn btn-primary btn-lg' role='button'>
+											<i class='glyphicon glyphicon-cloud'></i> Return</a>
+									</p>
+								  </div>";
+						}
+
+
+						//step 6 : display table (both if persist success or error)
+						echo "<div class='well col-md-3 col-md-offset-1'>
+							  		<h5><i class='glyphicon glyphicon-time'></i>".$raw_date."</h5>
+							  		<h5><i class='glyphicon glyphicon-list-alt'></i>".$connect->getDataSize($res)."	entries</h5>
+							  	</div>
+							  	<div class='table-responsive col-md-12'>
+							        <table class='table table-hover table-striped'>
+							          <thead>
+							            <tr>";
+
+						$connect->displayTable($res);
+						
+						echo "</tbody></table></div>";
+					}	
+				}
+				//end step 2
+				$connect->sapClose();
+			}
+			else{
+				//error step 1
+				echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+						<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
+						<p>The import is already saved in database for this date</p>
+						<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+							<i class='glyphicon glyphicon-repeat'></i> Return</a>
+						</p>
+					  </div>";
+			}
 		}
 		else{
-			$log = "<div class='alert alert-success col-md-4 col-md-offset-1' role='alert'><h4><i class='glyphicon glyphicon-thumbs-up'></i> The import was realized with success ! </h4><p>Please check the data and proceed to save in database.</p></div>";
+		//error step 0
+			echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+					<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
+					<p>The date you provided contains an error, please check.</p>
+					<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+							<i class='glyphicon glyphicon-repeat'></i> Return</a>
+					</p>
+				  </div>";
 		}
-	}
-	else{
-		$log = "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'><h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4><p>The date you provided contains an error, please check.</p></div>";
-	}
-
-	$connect->sapPersist($res);		
-
-  ?>
-
-  <div id="content" class="col-md-12">
-  	<div class="col-md-3">
-  		<h1>Import</h1>
-  	</div>
-  	<?php
-		echo $log;
-	?>
-  	<div class="well col-md-3 col-md-offset-1">
-	  	<div class="col-md-7">
-	  		<h5><i class="glyphicon glyphicon-time"></i> 
-	  			<?php
-	  				echo $connect->getDate();
-	  			?>
-	  		</h5>
-	  		<h5>
-	  			<i class="glyphicon glyphicon-list-alt"></i>
-	  			<?php
-	  				echo $connect->getDataSize($res);
-	  			?> 
-	  			entries
-	  		</h5>
-	  	</div>
-	  	<div class="col-md-5 persist">
-	  		<?php
-	  			if(!$res[0] or ($connect->getDataSize($res)) == 0){
-	  				echo "<a href='http://localhost:8000/input/extimport' class='btn btn-warning btn-lg' role='button'><i class='glyphicon glyphicon-repeat'></i> Return</a>";
-	  			}
-	  			else{
-	  				echo "<a href='http://localhost:8000/input' class='btn btn-primary btn-lg' role='button'><i class='glyphicon glyphicon-cloud'></i> Return</a>";
-	  			}
-	  		?>
-	  	</div>
-  	</div>
-  	<div class="table-responsive col-md-12">
-        <table class="table table-hover table-striped">
-          <thead>
-            <tr>
-
-  <?php
-  	
-	$connect->displayTable($res);
-	$connect->sapClose();
-
-  ?>
-
-		  </tbody>
-		</table>
-	</div>
-  </div>
+		?>
+  	</div> <!-- div content -->
 </body>
 </html>

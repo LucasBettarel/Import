@@ -14,18 +14,29 @@ class sapConnection
     public function sapConnect() {
         try {
             $this->conn = new sapnwrfc($this->config);
+            return true;
         }
         catch (sapnwrfcConnectionException $e) {
-            echo "Exception type: ".$e."<br />";
-            echo "Exception key: ".$e->key."<br />";
-            echo "Exception code: ".$e->code."<br />";
-            echo "Exception message: ".$e->getMessage();
+            echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+                    <h4><i class='glyphicon glyphicon-warning-sign'></i> Connection with SAP failed ! </h4>
+                    <p>Exception type: ".$e."<br /> Exception key: ".$e->key."<br /> Exception code: ".$e->code."<br /> Exception message: ".$e->getMessage()."</p>
+                    <p>
+                        <a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+                            <i class='glyphicon glyphicon-repeat'></i> Return
+                        </a>
+                    </p>
+                   </div>";
         }
         catch (Exception $e) {
-            echo "Exception type: ".$e."\n";
-            echo "Exception key: ".$e->key."\n";
-            echo "Exception code: ".$e->code."\n";
-            echo "Exception message: ".$e->getMessage();
+            echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+                    <h4><i class='glyphicon glyphicon-warning-sign'></i> Connection with SAP failed ! </h4>
+                    <p>Exception type: ".$e."<br /> Exception key: ".$e->key."<br /> Exception code: ".$e->code."<br /> Exception message: ".$e->getMessage()."</p>
+                    <p>
+                        <a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+                            <i class='glyphicon glyphicon-repeat'></i> Return
+                        </a>
+                    </p>
+                   </div>";
             throw new Exception('Connection failed.');
         }    
     }
@@ -64,66 +75,46 @@ class sapConnection
     public function displayTable($data){
 
         for($i=0; $i<sizeof($data[2]) ; $i++){
-            echo "<th>";
-            echo $data[2][$i]["FIELDTEXT"];
-            echo "</th>";
+            echo "<th>".$data[2][$i]['FIELDTEXT']."</th>";
         }
-
-        echo "</tr>";
-        echo "</thead>";
-        echo "<tbody>";
+        echo "</tr></thead><tbody>";
 
         for ($i=0; $i<sizeof($data[1]); $i++){
-            //We have use the / symbol as a delimiter, so we need to cut every field and put it on an array slot
-            $test = split("@",$data[1][$i]["WA"]);
             echo "<tr>";
-
             for($j=0; $j<sizeof($data[2]); $j++){
-                echo "<td>";
-                if($j == 4){
-                    $test[$j] = date_create_from_format('Ymd',$test[$j]);
-                    $test[$j] = date_format($test[$j],'d/m/Y');
-                }
-                elseif ($j ==  5){
-                    $test[$j] = date_create_from_format('His',$test[$j]);
-                    $test[$j] = date_format($test[$j],'H:i:s');
-                }
-                echo $test[$j];
-                echo "</td>";
+                echo "<td>".$data[1][$i][$j]."</td>";
             }
             echo "</tr>";
         }
     }
 
-    public function sapPersist($data){
+    public function sapPersist($data, $date){
         try {
             $bdd = new PDO('mysql:host=localhost;dbname=zest;charset=utf8', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
         } catch (Exception $e) {
             die('Error : ' . $e->getMessage());
+            return false;
         }
 
-        for($i=0; $i<sizeof($data[1]); $i++){
-            $cell = split("@",$data[1][$i]["WA"]);
-
-            $cell[4] = date_create_from_format('Ymd', $cell[4]);
-            $cell[4] = $cell[4]->format('Y-m-d');
-            $cell[5] = date_create_from_format('His', $cell[5]);
-            $cell[5] = $cell[5]->format('H:i:s');
-
+        for($i=0; $i<sizeof($data); $i++){
             $req = $bdd->prepare('INSERT INTO saprf (warehouse, transfer_order, material, plant, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
                                   VALUES (:warehouse, :transfer_order, :material, :plant, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin)');
             $req->execute(array(
-                'warehouse' => $cell[0],
-                'transfer_order' => $cell[1],
-                'material' => $cell[2],
-                'plant' => $cell[3],
-                'date_confirmation' => $cell[4],
-                'time_confirmation' => $cell[5],
-                'user' => $cell[6],
-                'source_storage_type' => $cell[7],
-                'source_storage_bin' => $cell[8]
+                'warehouse' => $data[$i][0],
+                'transfer_order' => $data[$i][1],
+                'material' => $data[$i][2],
+                'plant' => $data[$i][3],
+                'date_confirmation' => $data[$i][4],
+                'time_confirmation' => $data[$i][5],
+                'user' => $data[$i][6],
+                'source_storage_type' => $data[$i][7],
+                'source_storage_bin' => $data[$i][8]
                 ));
         }
+
+        //persist data import
+        $report = $bdd->exec('INSERT INTO sapimports (date, import, process, review) VALUES ('.$date.', true, false, false)');
+        return true;
     }
 
     public function sapClose(){
@@ -143,7 +134,56 @@ class sapConnection
     public function getDataSize($data){
         return sizeof($data[1]);
     }
+
+    public function checkImportExist($dateI){
+        try {
+            $bdd = new PDO('mysql:host=localhost;dbname=zest;charset=utf8', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+        } catch (Exception $e) {
+            die('Error : ' . $e->getMessage());
+        }
+
+        $dupli = $bdd->prepare("SELECT * FROM sapimports WHERE date = ?");
+        $dupli->execute(array($dateI));
+
+        if($dupli->rowCount() == 0){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
+    public function consolidateData($data){
+        // prepare array
+        $multiArray = array();
+        $uniqueArray = array();
+        $compareMultiArray = array();
+        $compareUniqueArray = array();
+
+        for($i=0; $i<sizeof($data); $i++){
+            $cell = split("@",$data[$i]["WA"]);
+
+            $cell[4] = date_create_from_format('Ymd', $cell[4]);
+            $cell[4] = $cell[4]->format('Y-m-d');
+            $cell[5] = date_create_from_format('His', $cell[5]);
+            $cell[5] = $cell[5]->format('H:i:s');
+
+            // add to the prepared arrays
+            for($j=0; $j<sizeof($cell); $j++){
+                $multiArray[$i][$j] = $cell[$j];
+                if($j == 1 or $j == 2 or $j == 6 or $j == 7 or $j == 8){
+                    $compareMultiArray[$i][$j] = $cell[$j];
+                }
+            }
+
+            //compare arrays with specific fields
+            if(!in_array($compareMultiArray[$i], $compareUniqueArray)){
+                //if value not there in $compareuniquearray, add to compare and real array
+                $compareUniqueArray[] = $compareMultiArray[$i];
+                $uniqueArray[] = $multiArray[$i];
+            }
+        }
+        return $uniqueArray;
+    }
 }
-
-
 ?>
