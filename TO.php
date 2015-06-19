@@ -46,10 +46,8 @@ class sapConnection
             $func = $this->conn->function_lookup("RFC_READ_TABLE");
             $parms = array('QUERY_TABLE' => "LTAP",
                            'DELIMITER' => "@",
-                           'FIELDS' => array(array('FIELDNAME' => "LGNUM"),
-                                             array('FIELDNAME' => "TANUM"),
+                           'FIELDS' => array(array('FIELDNAME' => "TANUM"),
                                              array('FIELDNAME' => "MATNR"),
-                                             array('FIELDNAME' => "WERKS"),
                                              array('FIELDNAME' => "QDATU"),
                                              array('FIELDNAME' => "QZEIT"),
                                              array('FIELDNAME' => "QNAME"),
@@ -97,18 +95,16 @@ class sapConnection
         }
 
         for($i=0; $i<sizeof($data); $i++){
-            $req = $bdd->prepare('INSERT INTO saprf (warehouse, transfer_order, material, plant, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
-                                  VALUES (:warehouse, :transfer_order, :material, :plant, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin)');
+            $req = $bdd->prepare('INSERT INTO saprf (transfer_order, material, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
+                                  VALUES (:transfer_order, :material, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin)');
             $req->execute(array(
-                'warehouse' => $data[$i][0],
-                'transfer_order' => $data[$i][1],
-                'material' => $data[$i][2],
-                'plant' => $data[$i][3],
-                'date_confirmation' => $data[$i][4],
-                'time_confirmation' => $data[$i][5],
-                'user' => $data[$i][6],
-                'source_storage_type' => $data[$i][7],
-                'source_storage_bin' => $data[$i][8]
+                'transfer_order' => $data[$i][0],
+                'material' => $data[$i][1],
+                'date_confirmation' => $data[$i][2],
+                'time_confirmation' => $data[$i][3],
+                'user' => $data[$i][4],
+                'source_storage_type' => $data[$i][5],
+                'source_storage_bin' => $data[$i][6]
                 ));
         }
 
@@ -164,15 +160,15 @@ class sapConnection
         for($i=0; $i<sizeof($data); $i++){
             $cell = split("@",$data[$i]["WA"]);
 
-            $cell[4] = date_create_from_format('Ymd', $cell[4]);
-            $cell[4] = $cell[4]->format('Y-m-d');
-            $cell[5] = date_create_from_format('His', $cell[5]);
-            $cell[5] = $cell[5]->format('H:i:s');
+            $cell[2] = date_create_from_format('Ymd', $cell[2]);
+            $cell[2] = $cell[2]->format('Y-m-d');
+            $cell[3] = date_create_from_format('His', $cell[3]);
+            $cell[3] = $cell[3]->format('H:i:s');
 
             // add to the prepared arrays
             for($j=0; $j<sizeof($cell); $j++){
                 $multiArray[$i][$j] = $cell[$j];
-                if($j == 1 or $j == 2 or $j == 6 or $j == 7 or $j == 8){
+                if($j == 0 or $j == 1 or $j == 4 or $j == 5 or $j == 6){
                     $compareMultiArray[$i][$j] = $cell[$j];
                 }
             }
