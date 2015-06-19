@@ -113,7 +113,8 @@ class sapConnection
         }
 
         //persist data import
-        $report = $bdd->exec('INSERT INTO sapimports (date, import, process, review) VALUES ('.$date.', true, false, false)');
+        $report = $bdd->prepare('INSERT INTO sapimports (date, import, process, review) VALUES (:date, true, false, false)');
+        $report->execute(array('date' => $date));
         return true;
     }
 
