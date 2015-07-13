@@ -74,7 +74,7 @@
 					else{
 
 						//step 4 : split/prepare array and consolidate
-						$res[1] = $connect->consolidateData($res[1]);
+						$res[1] = $connect->consolidateData($res[1], $datesap);
 
 						//step 5 : persist data to phpmyadmin
 						$saving = $connect->sapPersist($res[1], $raw_date);
