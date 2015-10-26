@@ -39,7 +39,7 @@
 
 		<?php
 		require_once 'TO.php';
-		ini_set('max_execution_time', 300);
+		ini_set('max_execution_time', 600);
 		$connect = new sapConnection();
 
 		//step 0 : check if date is valid (not null + not=0 +checkdate true)

@@ -55,7 +55,10 @@ class sapConnection
                                              array('FIELDNAME' => "QZEIT"),
                                              array('FIELDNAME' => "QNAME"),
                                              array('FIELDNAME' => "VLTYP"),
-                                             array('FIELDNAME' => "VLPLA")
+                                             array('FIELDNAME' => "VLPLA"),
+                                             array('FIELDNAME' => "NLTYP"),
+                                             array('FIELDNAME' => "NLPLA"),
+                                             array('FIELDNAME' => "LGORT")
                                              ),
                            'OPTIONS' => array(array('TEXT' => "LGNUM EQ 'L79' AND ( QDATU EQ '".$date."' OR QDATU EQ '".$endDate."' )")
                                               ));
@@ -90,8 +93,13 @@ class sapConnection
     }
 
     public function sapPersist($data, $date){
+
+//$datela = date_create_from_format('Y-m-d',$datela);
+//$datela->setTime(00,00,00);
+//$date = date_format($datela, 'Y-m-d H:i:s');
+
         try {
-            $bdd = new PDO('mysql:host=localhost;dbname=zest;charset=utf8', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+            $bdd = new PDO('mysql:host=10.211.27.130;dbname=zest;charset=utf8', 'importZest', 'zest@123', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
         } catch (Exception $e) {
             die('Error : ' . $e->getMessage());
             return false;
@@ -101,10 +109,12 @@ class sapConnection
 
         try 
         {
-            $req = $bdd->prepare('INSERT INTO saprf (transfer_order, material, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin) 
-                                  VALUES (:transfer_order, :material, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin)');
-          
-            for($i=0; $i<sizeof($data); $i++){
+            $req = $bdd->prepare('INSERT INTO saprf (transfer_order, material, date_confirmation, time_confirmation, user, source_storage_type, source_storage_bin, destination_storage_type, destination_storage_bin, date_import, storage_location) 
+                                  VALUES (:transfer_order, :material, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin, :destination_storage_type, :destination_storage_bin, :date_import, :storage_location)');
+//to change
+//            for($i=0; $i<sizeof($data); $i++){
+              echo "start lines";
+              for($i=0; $i<sizeof($data); $i++){
            
                 $parameters = array(
                     'transfer_order' => $data[$i][0],
@@ -113,11 +123,19 @@ class sapConnection
                     'time_confirmation' => $data[$i][3],
                     'user' => $data[$i][4],
                     'source_storage_type' => $data[$i][5],
-                    'source_storage_bin' => $data[$i][6]
+                    'source_storage_bin' => $data[$i][6],
+                    'destination_storage_type' => $data[$i][7],
+                    'destination_storage_bin' => $data[$i][8],
+                    'date_import' => $date,
+                    'storage_location' => $data[$i][9]
                     );
 
                 $req->execute($parameters);
             }
+         
+        echo "start prepare";
+        $report = $bdd->prepare('INSERT INTO sapimports (date, import, process, review, inputs) VALUES (:date, true, false, false, 0)');
+        $report->execute(array('date' => $date));
 
             $bdd->commit();
             $isOK = true;
@@ -126,12 +144,9 @@ class sapConnection
             {
                 $isOK = false;
                 $bdd->rollback();
-                schFunctions::debugMsg( "Error" . $e->getMessage());
+                echo( "Error" . $e->getMessage());
             }
 
-        //persist data import
-        $report = $bdd->prepare('INSERT INTO sapimports (date, import, process, review, inputs) VALUES (:date, true, false, false, 0)');
-        $report->execute(array('date' => $date));
         return true;
     }
 
@@ -155,7 +170,7 @@ class sapConnection
 
     public function checkImportExist($dateI){
         try {
-            $bdd = new PDO('mysql:host=localhost;dbname=zest;charset=utf8', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+            $bdd = new PDO('mysql:host=10.211.27.130;dbname=zest;charset=utf8', 'importZest', 'zest@123', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
         } catch (Exception $e) {
             die('Error : ' . $e->getMessage());
         }
@@ -205,8 +220,15 @@ class sapConnection
                 // add to the prepared arrays
                 for($j=0; $j<sizeof($cell); $j++){
                     $multiArray[$i][$j] = $cell[$j];
-                    if($j == 0 or $j == 1 or $j == 4 or $j == 5 or $j == 6){
-                        $compareMultiArray[$i][$j] = $cell[$j];
+                    //if cell[5] = "902" then compare by destbin else by sourcebin 
+                    if($cell[5] != "902"){
+                        if($j == 0 or $j == 1 or $j == 4 or $j == 5 or $j == 6){
+                            $compareMultiArray[$i][$j] = $cell[$j];
+                        }
+                    }else{
+                        if($j == 0 or $j == 1 or $j == 4 or $j == 7 or $j == 8){
+                            $compareMultiArray[$i][$j] = $cell[$j];
+                        }
                     }
                 }
 
@@ -216,39 +238,6 @@ class sapConnection
                     $compareUniqueArray[] = $compareMultiArray[$i];
                     $uniqueArray[] = $multiArray[$i];
                 }
-            }
-        }
-        return $uniqueArray;
-    }
-
-    public function removeOffDate($data){
-        // prepare array
-        $multiArray = array();
-        $uniqueArray = array();
-        $compareMultiArray = array();
-        $compareUniqueArray = array();
-
-        for($i=0; $i<sizeof($data); $i++){
-            $cell = split("@",$data[$i]["WA"]);
-
-            $cell[2] = date_create_from_format('Ymd', $cell[2]);
-            $cell[2] = $cell[2]->format('Y-m-d');
-            $cell[3] = date_create_from_format('His', $cell[3]);
-            $cell[3] = $cell[3]->format('H:i:s');
-
-            // add to the prepared arrays
-            for($j=0; $j<sizeof($cell); $j++){
-                $multiArray[$i][$j] = $cell[$j];
-                if($j == 0 or $j == 1 or $j == 4 or $j == 5 or $j == 6){
-                    $compareMultiArray[$i][$j] = $cell[$j];
-                }
-            }
-
-            //compare arrays with specific fields
-            if(!in_array($compareMultiArray[$i], $compareUniqueArray)){
-                //if value not there in $compareuniquearray, add to compare and real array
-                $compareUniqueArray[] = $compareMultiArray[$i];
-                $uniqueArray[] = $multiArray[$i];
             }
         }
         return $uniqueArray;
