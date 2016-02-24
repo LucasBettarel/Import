@@ -17,22 +17,22 @@ class sapConnection
             return true;
         }
         catch (sapnwrfcConnectionException $e) {
-            echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+            echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
                     <h4><i class='glyphicon glyphicon-warning-sign'></i> Connection with SAP failed ! </h4>
                     <p>Exception type: ".$e."<br /> Exception key: ".$e->key."<br /> Exception code: ".$e->code."<br /> Exception message: ".$e->getMessage()."</p>
                     <p>
-                        <a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+                        <a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
                             <i class='glyphicon glyphicon-repeat'></i> Return
                         </a>
                     </p>
                    </div>";
         }
-        catch (Exception $e) {
-            echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+        catch (Exception $e) 
+            echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
                     <h4><i class='glyphicon glyphicon-warning-sign'></i> Connection with SAP failed ! </h4>
                     <p>Exception type: ".$e."<br /> Exception key: ".$e->key."<br /> Exception code: ".$e->code."<br /> Exception message: ".$e->getMessage()."</p>
                     <p>
-                        <a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+                        <a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
                             <i class='glyphicon glyphicon-repeat'></i> Return
                         </a>
                     </p>
