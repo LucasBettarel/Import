@@ -1,41 +1,34 @@
 <!DOCTYPE html>
-<html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zest - Import Sap</title>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css">
+
+  <title>Zest - Imports</title>
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-  <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="coontainer-fluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="http://localhost:8000/input/">
-          <img alt="Schneider Electric" src="img/logo.png">
-        </a>
-      </div>
-
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li><a href="http://localhost:8000/input/"><i class="glyphicon glyphicon-pencil"></i> Manhours Input</a></li>
-          <li><a href="http://localhost:8000/zest/"><i class="glyphicon glyphicon-glass"></i> Tutorial</a></li>
-        </ul>
-      </div><!-- /.navbar-collapse -->
-    </div>
-  </nav>
-
-  	<div id="content" class="col-md-12">
-	  	<div class="col-md-3">
-	  		<h1>Import</h1>
-	  	</div>
+  <ul id="gn-menu" class="gn-menu-main">
+    <li class="gn-trigger">
+      <a class="gn-icon gn-icon-menu"><span>Menu</span></a>
+    </li>
+    <li>
+      <a href="http://zest.sg.schneider-electric.com"><img alt="Schneider Electric" src="img/logo.png"></a>
+    </li>
+    <li><a href="http://zest.sg.schneider-electric.com/input"><i class="glyphicon glyphicon-pencil"></i> Manhours Input</a></li>
+    <li><a href="http://zest.sg.schneider-electric.com/report"><i class="glyphicon glyphicon-stats"></i> Reports</a></li>
+  </ul>
+ 
+  <div id="content">
+    <div class="col-md-12">
+    	  <div class="header-block">
+	    	  <header class="h-sap">
+			    <div class="line"></div>
+			    <h2><i class="glyphicon glyphicon-cloud"> </i> SAP Import</h2>
+			  </header>
+		  </div>
 
 		<?php
 		require_once 'TO.php';
@@ -63,10 +56,10 @@
 					$res = $connect->readTable($datesap);
 					if (!$res[0] or ($connect->getDataSize($res)) == 0){
 						//error on read data Table
-						echo "<div class='alert alert-warning col-md-4 col-md-offset-1' role='alert'>
+						echo "<div class='alert alert-warning col-md-4 col-md-offset-2' role='alert'>
 								<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups !</h4>
 								<p>Error on importing data from SAP, please try again...</p>
-								<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+								<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
 									<i class='glyphicon glyphicon-repeat'></i> Return</a>
 								</p>
 							  </div>";
@@ -80,20 +73,23 @@
 						$saving = $connect->sapPersist($res[1], $raw_date);
 
 						if(!$saving){
-							echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+							echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
 									<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups ! </h4>
 									<p>Something went wrong while saving data, please check.</p>
-									<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+									<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
 											<i class='glyphicon glyphicon-repeat'></i> Return</a>
 									</p>
 								  </div>";
 						}
 						else{
-							echo "<div class='alert alert-success col-md-4 col-md-offset-1' role='alert'>
+							echo "<div class='alert alert-success col-md-4 col-md-offset-2' role='alert'>
 									<h4><i class='glyphicon glyphicon-thumbs-up'></i> The import was realized with success ! </h4>
 									<p>Feel free to check the data then go back to work...</p>
-									<p><a href='http://localhost:8000/input/extimport' class='btn btn-primary btn-lg' role='button'>
-											<i class='glyphicon glyphicon-cloud'></i> Return</a>
+									<p>Don't forget to refresh the productivity!</p>
+									<p><a href='http://zest.sg.schneider-electric.com/report/refresh' class='btn btn-success btn-lg' role='button'>
+											<i class='glyphicon glyphicon-cloud'></i> Refresh</a>
+										<a href='http://zest.sg.schneider-electric.com/makan/import' class='btn btn-warning btn-lg' role='button'>
+											<i class='glyphicon glyphicon-repeat'></i> Return</a>
 									</p>
 								  </div>";
 						}
@@ -119,10 +115,10 @@
 			}
 			else{
 				//error step 1
-				echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+				echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
 						<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
 						<p>The import is already saved in database for this date</p>
-						<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+						<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
 							<i class='glyphicon glyphicon-repeat'></i> Return</a>
 						</p>
 					  </div>";
@@ -130,15 +126,16 @@
 		}
 		else{
 		//error step 0
-			echo "<div class='alert alert-danger col-md-4 col-md-offset-1' role='alert'>
+			echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
 					<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
 					<p>The date you provided contains an error, please check.</p>
-					<p><a href='http://localhost:8000/input/extimport' class='btn btn-danger btn-lg' role='button'>
+					<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
 							<i class='glyphicon glyphicon-repeat'></i> Return</a>
 					</p>
 				  </div>";
 		}
 		?>
+		</div>
   	</div> <!-- div content -->
 </body>
 </html>

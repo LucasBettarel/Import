@@ -113,7 +113,7 @@ class sapConnection
                                   VALUES (:transfer_order, :material, :date_confirmation, :time_confirmation, :user, :source_storage_type, :source_storage_bin, :destination_storage_type, :destination_storage_bin, :date_import, :storage_location)');
 //to change
 //            for($i=0; $i<sizeof($data); $i++){
-              echo "start lines";
+//              echo "start lines";
               for($i=0; $i<sizeof($data); $i++){
            
                 $parameters = array(
@@ -133,7 +133,7 @@ class sapConnection
                 $req->execute($parameters);
             }
          
-        echo "start prepare";
+//        echo "start prepare";
         $report = $bdd->prepare('INSERT INTO sapimports (date, import, process, review, inputs) VALUES (:date, true, false, false, 0)');
         $report->execute(array('date' => $date));
 
