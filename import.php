@@ -56,7 +56,7 @@
 					$res = $connect->readTable($datesap);
 					if (!$res[0] or ($connect->getDataSize($res)) == 0){
 						//error on read data Table
-						echo "<div class='alert alert-warning col-md-4 col-md-offset-2' role='alert'>
+						echo "<div class='alert alert-warning col-md-4 col-md-offset-4' role='alert'>
 								<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups !</h4>
 								<p>Error on importing data from SAP, please try again...</p>
 								<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
@@ -73,7 +73,7 @@
 						$saving = $connect->sapPersist($res[1], $raw_date);
 
 						if(!$saving){
-							echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
+							echo "<div class='alert alert-danger col-md-4 col-md-offset-4' role='alert'>
 									<h4><i class='glyphicon glyphicon-thumbs-down'></i> Oups ! </h4>
 									<p>Something went wrong while saving data, please check.</p>
 									<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
@@ -82,7 +82,7 @@
 								  </div>";
 						}
 						else{
-							echo "<div class='alert alert-success col-md-4 col-md-offset-2' role='alert'>
+							echo "<div class='alert alert-success col-md-4 col-md-offset-4' role='alert'>
 									<h4><i class='glyphicon glyphicon-thumbs-up'></i> The import was realized with success ! </h4>
 									<p>Feel free to check the data then go back to work...</p>
 									<p>Don't forget to refresh the productivity!</p>
@@ -115,7 +115,7 @@
 			}
 			else{
 				//error step 1
-				echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
+				echo "<div class='alert alert-danger col-md-4 col-md-offset-4' role='alert'>
 						<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
 						<p>The import is already saved in database for this date</p>
 						<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
@@ -126,7 +126,7 @@
 		}
 		else{
 		//error step 0
-			echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
+			echo "<div class='alert alert-danger col-md-4 col-md-offset-4' role='alert'>
 					<h4><i class='glyphicon glyphicon-warning-sign'></i> Error ! </h4>
 					<p>The date you provided contains an error, please check.</p>
 					<p><a href='javascript:history.go(-1)' class='btn btn-danger btn-lg' role='button'>
