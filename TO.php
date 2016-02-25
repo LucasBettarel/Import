@@ -27,7 +27,7 @@ class sapConnection
                     </p>
                    </div>";
         }
-        catch (Exception $e) 
+        catch (Exception $e) {
             echo "<div class='alert alert-danger col-md-4 col-md-offset-2' role='alert'>
                     <h4><i class='glyphicon glyphicon-warning-sign'></i> Connection with SAP failed ! </h4>
                     <p>Exception type: ".$e."<br /> Exception key: ".$e->key."<br /> Exception code: ".$e->code."<br /> Exception message: ".$e->getMessage()."</p>
